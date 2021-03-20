@@ -1,0 +1,50 @@
+unction queryPolygon(location,fields,token,debugmode){
+
+ 
+
+    if (location===""){
+        return (debugmode? "Location Object is empty":"");
+    }
+
+ 
+
+    var featureLayer = "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_ZIP_Codes_2016/FeatureServer/0";
+
+ 
+
+    var coordsArray = location.split(" ");
+    var coords = coordsArray[1] + "," + coordsArray[0]
+
+ 
+
+    var xmlhttp = new XMLHttpRequest();
+    var url = featureLayer + "/query?geometry=" + coords + "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=" + fields + "&returnGeometry=false&returnCount=1&f=json"
+
+
+    if (token){
+        url = url + "&token=" + token;
+    }
+
+ 
+
+    xmlhttp.open("GET",url,false);
+        xmlhttp.send();
+
+ 
+
+    if (xmlhttp.status!==200){
+        return (debugmode? xmlhttp.status:"");
+    } else {
+        var responseJSON=JSON.parse(xmlhttp.responseText)
+        if (responseJSON.error){
+            return (debugmode? JSON.stringify(responseJSON.error):"");
+        } else {
+            if (responseJSON.features[0]){
+                return JSON.stringify(responseJSON.features[0]);
+            }
+            else{
+                return (debugmode? "No Features Found":"");
+            }
+        }
+    }
+}
