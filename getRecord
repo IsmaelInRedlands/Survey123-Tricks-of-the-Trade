@@ -1,0 +1,37 @@
+function getRecord(featureLayer,where,fields,token)
+{
+
+        var debugmode = false;
+        if(fields===''){
+            fields = '*';
+        }
+     
+        var xmlhttp = new XMLHttpRequest();
+        var url = featureLayer + "/query?where=" + where + "&outFields=" + fields + "&returnGeometry=false&returnCount=1&f=json"
+
+
+        if (token){
+            url = url + "&token=" + token;
+        }
+
+        xmlhttp.open("GET",url,false);
+            xmlhttp.send();
+
+     
+
+        if (xmlhttp.status!==200){
+            return (debugmode? xmlhttp.status:"");
+        } else {
+            var responseJSON=JSON.parse(xmlhttp.responseText)
+            if (responseJSON.error){
+                return (debugmode? JSON.stringify(responseJSON.error):"");
+            } else {
+                if (responseJSON.features[0]){
+                    return JSON.stringify(responseJSON.features[0]);
+                }
+                else{
+                    return (debugmode? "No Features Found":"");
+                }
+            }
+        }
+    }
