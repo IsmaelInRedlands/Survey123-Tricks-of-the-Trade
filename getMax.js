@@ -4,6 +4,7 @@ function getMax(field,token){
 
 	var xmlhttp = new XMLHttpRequest();
 	var url = featureLayer + "/query?f=json&where=1=1&outStatistics=[{'statisticType':'max','onStatisticField':'" + field + "', 'outStatisticFieldName':'MaxValue'}]";
+	//var url = featureLayer + "/query?f=json&where=1=1& + encodeURI("outStatistics=[{'statisticType':'max','onStatisticField':'") + field + encodeURI("', 'outStatisticFieldName':'MaxValue'}]");
 
 
 	if (token){
