@@ -1,0 +1,91 @@
+function getNearestRecord(featureLayer, location, searchWithinMeters,fields,where,token,debugmode){
+    
+    if (featureLayer==="" || featureLayer===undefined){
+        featureLayer = "https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Major_Cities/FeatureServer/0";
+    }
+
+    if (location==="" || location===undefined){
+        return (debugmode? "Location Object is empty":"");
+    }
+
+    if (fields==="" || fields===undefined){
+        fields="*";
+    }
+
+    if (where==="" || where===undefined){
+        where="1=1";
+    }
+
+    var coordsArray = location.split(" ");
+    var coords = coordsArray[1] + "," + coordsArray[0]
+
+    var xmlhttp = new XMLHttpRequest();
+    var url = featureLayer + "/query?geometry=" + coords +  "&where=" + where + "&geometryType=esriGeometryPoint&inSR=4326&distance=" + searchWithinMeters + "&units=esriSRUnit_Meter&outFields=" + fields + "&returnGeometry=true&outSR=4326&f=json"
+
+    if (token){
+        url = url + "&token=" + token;
+    }
+
+    xmlhttp.open("GET",url,false);
+        xmlhttp.send();
+
+    if (xmlhttp.status!==200){
+        return (debugmode? xmlhttp.status:"");
+    } else {
+        var responseJSON=JSON.parse(xmlhttp.responseText)
+        if (responseJSON.error){
+            return (debugmode? JSON.stringify(responseJSON.error):"");
+        } else {
+			var count = responseJSON.features.length;
+            if (count===0){
+                return (debugmode? "No Features Found":"");
+            }
+            else if (count===1){
+                return JSON.stringify(responseJSON.features[0]);
+            }
+            else if (count>1){
+				var nearestIndex = findNearestIndex (location, responseJSON.features);
+                return JSON.stringify(responseJSON.features[nearestIndex]);
+            }
+        }
+    }
+}
+
+function findNearestIndex(location, features){
+	var nearestIndex = 0;
+	var minDistance = 999999999999;
+
+    var coordsArray = location.split(" ");
+	var lat1 = coordsArray[0];
+    var lon1 = coordsArray[1];
+
+    for (let i = 0; i < features.length; i++) {
+      var dist = getDistanceKM(lat1,lon1,features[i].geometry.y,features[i].geometry.x);
+	  if (dist < minDistance){
+        minDistance = dist;
+        nearestIndex = i;
+	  }
+    } 
+
+	return nearestIndex;
+}
+
+function getDistanceKM(lat1, lon1, lat2, lon2) {
+    if ((lat1 == lat2) && (lon1 == lon2)) {
+        return 0;
+    }
+    else {
+        var radlat1 = Math.PI * lat1/180;
+        var radlat2 = Math.PI * lat2/180;
+        var theta = lon1-lon2;
+        var radtheta = Math.PI * theta/180;
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        if (dist > 1) {
+            dist = 1;
+        }
+        dist = Math.acos(dist);
+        dist = dist * 180/Math.PI;
+        dist = dist * 60 * 1.1515;
+        return dist * 1.609344;
+    }
+}
